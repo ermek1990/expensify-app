@@ -1,6 +1,15 @@
 import configureMockStore from 'redux-mock-store';
 import thunk from 'redux-thunk';
-import { addExpense, startAddExpense, editExpense, startEditExpense, removeExpense, startRemoveExpense, setExpenses, startSetExpenses } from '../../actions/expenses';
+import {
+  startAddExpense,
+  addExpense,
+  editExpense,
+  startEditExpense,
+  removeExpense,
+  startRemoveExpense,
+  setExpenses,
+  startSetExpenses
+} from '../../actions/expenses';
 import expenses from '../fixtures/expenses';
 import database from '../../firebase/firebase';
 
@@ -22,7 +31,7 @@ test('should setup remove expense action object', () => {
   });
 });
 
-test('should remove expenses from firebase', (done) => {
+test('should remove expense from firebase', (done) => {
   const store = createMockStore({});
   const id = expenses[2].id;
   store.dispatch(startRemoveExpense({ id })).then(() => {
@@ -49,12 +58,10 @@ test('should setup edit expense action object', () => {
   });
 });
 
-test('should edit expenses from firebase', (done) => {
+test('should edit expense from firebase', (done) => {
   const store = createMockStore({});
   const id = expenses[0].id;
-  const updates = {
-    note: 'New note value'
-  };
+  const updates = { amount: 21045 };
   store.dispatch(startEditExpense(id, updates)).then(() => {
     const actions = store.getActions();
     expect(actions[0]).toEqual({
@@ -64,7 +71,7 @@ test('should edit expenses from firebase', (done) => {
     });
     return database.ref(`expenses/${id}`).once('value');
   }).then((snapshot) => {
-    expect(snapshot.val().note).toEqual(updates.note);
+    expect(snapshot.val().amount).toBe(updates.amount);
     done();
   });
 });
@@ -87,11 +94,6 @@ test('should add expense to database and store', (done) => {
   };
 
   store.dispatch(startAddExpense(expenseData)).then(() => {
-    // Setting up the timeout interval
-    // since the async call takes longer
-    // than expected on slow internet connection
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 25000;
-
     const actions = store.getActions();
     expect(actions[0]).toEqual({
       type: 'ADD_EXPENSE',
@@ -100,6 +102,7 @@ test('should add expense to database and store', (done) => {
         ...expenseData
       }
     });
+
     return database.ref(`expenses/${actions[0].expense.id}`).once('value');
   }).then((snapshot) => {
     expect(snapshot.val()).toEqual(expenseData);
@@ -111,17 +114,12 @@ test('should add expense with defaults to database and store', (done) => {
   const store = createMockStore({});
   const expenseDefaults = {
     description: '',
-    note: '',
     amount: 0,
+    note: '',
     createdAt: 0
   };
 
   store.dispatch(startAddExpense({})).then(() => {
-    // Setting up the timeout interval
-    // since the async call takes longer
-    // than expected on slow internet connection
-    jasmine.DEFAULT_TIMEOUT_INTERVAL = 25000;
-
     const actions = store.getActions();
     expect(actions[0]).toEqual({
       type: 'ADD_EXPENSE',
@@ -130,6 +128,7 @@ test('should add expense with defaults to database and store', (done) => {
         ...expenseDefaults
       }
     });
+
     return database.ref(`expenses/${actions[0].expense.id}`).once('value');
   }).then((snapshot) => {
     expect(snapshot.val()).toEqual(expenseDefaults);
